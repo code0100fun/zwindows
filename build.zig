@@ -3,12 +3,18 @@ const builtin = @import("builtin");
 
 pub fn build(b: *std.Build) !void {
     const io = b.graph.io;
-    checkGitLfsContent(b, io) catch {
-        try ensureGit(b.allocator, io);
-        try ensureGitLfs(b, io, "install");
-        try ensureGitLfs(b, io, "pull");
-        try checkGitLfsContent(b, io);
-    };
+    // Only meaningful for a direct checkout. `zig fetch` does not resolve Git
+    // LFS, and .lfs-content-token is not part of the published package, so a
+    // dependency copy can never satisfy this check. Consumers needing the
+    // binary SDK (dxc, D3D12Core.dll, ...) must supply LFS content themselves.
+    if (b.pkg_hash.len == 0) {
+        checkGitLfsContent(b, io) catch {
+            try ensureGit(b.allocator, io);
+            try ensureGitLfs(b, io, "install");
+            try ensureGitLfs(b, io, "pull");
+            try checkGitLfsContent(b, io);
+        };
+    }
 
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
