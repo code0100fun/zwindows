@@ -671,6 +671,9 @@ pub const IDeviceContext = extern struct {
     pub inline fn Flush(self: *IDeviceContext) void {
         self.__v.Flush(self);
     }
+    pub inline fn GenerateMips(self: *IDeviceContext, pShaderResourceView: *IShaderResourceView) void {
+        self.__v.GenerateMips(self, pShaderResourceView);
+    }
     pub inline fn UpdateSubresource(self: *IDeviceContext, pDstResource: *IResource, DstSubresource: UINT, pDstBox: ?*BOX, pSrcData: *anyopaque, SrcRowPitch: UINT, SrcDepthPitch: UINT) void {
         self.__v.UpdateSubresource(self, pDstResource, DstSubresource, pDstBox, pSrcData, SrcRowPitch, SrcDepthPitch);
     }
@@ -788,7 +791,7 @@ pub const IDeviceContext = extern struct {
         ClearUnorderedAccessViewUint: *anyopaque,
         ClearUnorderedAccessViewFloat: *anyopaque,
         ClearDepthStencilView: *anyopaque,
-        GenerateMips: *anyopaque,
+        GenerateMips: *const fn (*T, *IShaderResourceView) callconv(WINAPI) void,
         SetResourceMinLOD: *anyopaque,
         GetResourceMinLOD: *anyopaque,
         ResolveSubresource: *anyopaque,
