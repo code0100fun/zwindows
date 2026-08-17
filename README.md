@@ -34,7 +34,7 @@ pub fn build(b: *std.Build) !void {
     });
 
     // Activate the sdk. This does things like ensure executables are executable by the system user.
-    const activate_zwindows = @import("zwindows").activateSdk(b, zwindows);
+    const activate_zwindows = @import("zwindows").activateSdk(b, zwindows, .{});
     exe.step.dependOn(activate_zwindows);
     
     // Import the Windows API bindings
@@ -47,10 +47,35 @@ pub fn build(b: *std.Build) !void {
     exe.root_module.addImport("zxaudio2", zwindows.module("zxaudio2"));
     
     // Install vendored binaries
-    try @import("zwindows").install_xaudio2(&exe.step, zwindows, .bin);
-    try @import("zwindows").install_d3d12(&exe.step, zwindows, .bin);
-    try @import("zwindows").install_directml(&exe.step, zwindows, .bin);
+    @import("zwindows").install_xaudio2(&exe.step, zwindows, .bin, .{});
+    @import("zwindows").install_d3d12(&exe.step, zwindows, .bin, .{});
+    @import("zwindows").install_directml(&exe.step, zwindows, .bin, .{});
 }
+```
+
+### Supplying your own binaries
+
+`zig fetch` does not resolve Git LFS, so when zwindows is used as a package the
+files under `bin/` arrive as LFS pointer files rather than real binaries. Vendor
+the binaries you need into your own project and pass their directory as
+`bin_path`:
+
+```zig
+const zwindows_bin: std.Build.LazyPath = b.path("vendor/zwindows/bin/x64");
+
+const activate_zwindows = @import("zwindows").activateSdk(b, zwindows, .{
+    .bin_path = zwindows_bin,
+});
+exe.step.dependOn(activate_zwindows);
+
+@import("zwindows").install_d3d12(&exe.step, zwindows, .bin, .{
+    .bin_path = zwindows_bin,
+});
+
+const shaders = @import("zwindows").addCompileShaders(b, "demo", zwindows, .{
+    .shader_ver = "6_6",
+    .bin_path = zwindows_bin,
+});
 ```
 
 ### Bindings Usage Example
