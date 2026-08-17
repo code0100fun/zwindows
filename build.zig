@@ -3,11 +3,11 @@ const builtin = @import("builtin");
 
 pub fn build(b: *std.Build) !void {
     const io = b.graph.io;
-    checkGitLfsContent(io) catch {
+    checkGitLfsContent(b, io) catch {
         try ensureGit(b.allocator, io);
-        try ensureGitLfs(b.allocator, io, "install");
-        try ensureGitLfs(b.allocator, io, "pull");
-        try checkGitLfsContent(io);
+        try ensureGitLfs(b, io, "install");
+        try ensureGitLfs(b, io, "pull");
+        try checkGitLfsContent(b, io);
     };
 
     const target = b.standardTargetOptions(.{});
@@ -332,7 +332,7 @@ fn ensureGit(allocator: std.mem.Allocator, io: std.Io) !void {
     }
 }
 
-fn ensureGitLfs(allocator: std.mem.Allocator, io: std.Io, cmd: []const u8) !void {
+fn ensureGitLfs(b: *std.Build, io: std.Io, cmd: []const u8) !void {
     const printNoGitLfs = (struct {
         fn impl() void {
             std.log.err("\n" ++
@@ -348,15 +348,18 @@ fn ensureGitLfs(allocator: std.mem.Allocator, io: std.Io, cmd: []const u8) !void
         }
     }).impl;
     const argv = &[_][]const u8{ "git", "lfs", cmd };
-    const result = std.process.run(allocator, io, .{
+    // Run in the package root so this operates on the zwindows checkout even
+    // when zwindows is built as a dependency of another project.
+    const result = std.process.run(b.allocator, io, .{
         .argv = argv,
+        .cwd = .{ .dir = b.build_root.handle },
     }) catch { // e.g. FileNotFound
         printNoGitLfs();
         return error.GitLfsNotFound;
     };
     defer {
-        allocator.free(result.stderr);
-        allocator.free(result.stdout);
+        b.allocator.free(result.stderr);
+        b.allocator.free(result.stdout);
     }
     if (result.term != .exited or result.term.exited != 0) {
         printNoGitLfs();
@@ -364,13 +367,15 @@ fn ensureGitLfs(allocator: std.mem.Allocator, io: std.Io, cmd: []const u8) !void
     }
 }
 
-fn checkGitLfsContent(io: std.Io) !void {
+fn checkGitLfsContent(b: *std.Build, io: std.Io) !void {
     const expected_contents =
         \\DO NOT EDIT OR DELETE
         \\This file is used to check if Git LFS content has been downloaded
     ;
     var buf: [expected_contents.len]u8 = undefined;
-    _ = std.Io.Dir.cwd().readFile(io, ".lfs-content-token", &buf) catch {
+    // Resolve against the package root rather than the process cwd, which is
+    // the consumer's directory when zwindows is built as a dependency.
+    _ = b.build_root.handle.readFile(io, ".lfs-content-token", &buf) catch {
         return error.GitLfsContentTokenNotFound;
     };
     if (!std.mem.eql(u8, expected_contents, &buf)) {
