@@ -1664,7 +1664,7 @@ pub const GraphicsContext = struct {
         const allocator = fba.allocator();
 
         const abspath = std.fs.path.join(allocator, &.{
-            std.fs.selfExeDirPathAlloc(allocator) catch unreachable,
+            windows.selfExeDirPathAlloc(allocator) catch unreachable,
             relpath,
         }) catch unreachable;
 
@@ -1804,7 +1804,7 @@ pub const GraphicsContext = struct {
         const allocator = fba.allocator();
 
         const abspath = std.fs.path.join(allocator, &.{
-            std.fs.selfExeDirPathAlloc(allocator) catch unreachable,
+            windows.selfExeDirPathAlloc(allocator) catch unreachable,
             relpath,
         }) catch unreachable;
 

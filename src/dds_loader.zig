@@ -123,22 +123,13 @@ pub fn loadTextureFromFile(
     max_size: u32,
     resources: *std.ArrayList(d3d12.SUBRESOURCE_DATA),
 ) !DdsImageInfo {
-    var file = std.fs.cwd().openFile(path, .{}) catch |err| {
-        return err;
-    };
-    defer file.close();
-
-    const file_stat = try file.stat();
-
-    const file_size = file_stat.size;
-    if (file_size < @sizeOf(u32) + @sizeOf(DDS_HEADER)) {
-        return DdsError.InvalidDDSData;
-    }
+    var threaded: std.Io.Threaded = .init(.failing, .{});
+    defer threaded.deinit();
+    const io = threaded.io();
 
     // Read all file
-    const file_data = try arena.alloc(u8, @intCast(file_size));
-    const read_bytes = try file.readAll(file_data);
-    if (read_bytes != file_size) {
+    const file_data = try std.Io.Dir.cwd().readFileAlloc(io, path, arena, .unlimited);
+    if (file_data.len < @sizeOf(u32) + @sizeOf(DDS_HEADER)) {
         return DdsError.InvalidDDSData;
     }
 
@@ -150,18 +141,20 @@ pub fn loadTextureFromMemory(file_data: []u8, arena: std.mem.Allocator, device: 
         return DdsError.InvalidDDSData;
     }
 
-    // Create a stream
-    var stream = std.io.fixedBufferStream(file_data);
-    var reader = stream.reader();
+    var offset: usize = 0;
 
     // Check DDS_MAGIC
-    const magic = try reader.readInt(u32, .little);
+    if (file_data.len < offset + @sizeOf(u32)) return DdsError.EndOfFile;
+    const magic = std.mem.readInt(u32, file_data[offset..][0..@sizeOf(u32)], .little);
+    offset += @sizeOf(u32);
     if (magic != DDS_MAGIC) {
         return DdsError.InvalidDDSData;
     }
 
     // Extract DDS_HEADER
-    const header = try reader.readStruct(DDS_HEADER);
+    if (file_data.len < offset + @sizeOf(DDS_HEADER)) return DdsError.EndOfFile;
+    const header = std.mem.bytesToValue(DDS_HEADER, file_data[offset..][0..@sizeOf(DDS_HEADER)]);
+    offset += @sizeOf(DDS_HEADER);
     if (header.dwSize != @as(u32, @intCast(@sizeOf(DDS_HEADER)))) {
         return DdsError.InvalidDDSData;
     }
@@ -179,7 +172,9 @@ pub fn loadTextureFromMemory(file_data: []u8, arena: std.mem.Allocator, device: 
         }
 
         has_dx10_extension = true;
-        dx10 = try reader.readStruct(DDS_HEADER_DXT10);
+        if (file_data.len < offset + @sizeOf(DDS_HEADER_DXT10)) return DdsError.EndOfFile;
+        dx10 = std.mem.bytesToValue(DDS_HEADER_DXT10, file_data[offset..][0..@sizeOf(DDS_HEADER_DXT10)]);
+        offset += @sizeOf(DDS_HEADER_DXT10);
     }
 
     // Check alpha mode
@@ -197,8 +192,9 @@ pub fn loadTextureFromMemory(file_data: []u8, arena: std.mem.Allocator, device: 
         data_size -= @sizeOf(DDS_HEADER_DXT10);
     }
 
-    var data = try arena.alloc(u8, data_size);
-    try reader.readNoEof(data);
+    if (file_data.len < offset + data_size) return DdsError.EndOfFile;
+    const data = try arena.alloc(u8, data_size);
+    @memcpy(data, file_data[offset..][0..data_size]);
 
     const width: u32 = header.dwWidth;
     var height: u32 = header.dwHeight;

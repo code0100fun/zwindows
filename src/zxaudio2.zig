@@ -194,7 +194,7 @@ pub const AudioContext = struct {
         const allocator = fba.allocator();
 
         const abspath = std.fs.path.join(allocator, &.{
-            std.fs.selfExeDirPathAlloc(allocator) catch unreachable,
+            windows.selfExeDirPathAlloc(allocator) catch unreachable,
             relpath,
         }) catch unreachable;
 
@@ -240,7 +240,7 @@ pub const Stream = struct {
             const arena = arena_state.allocator();
 
             const abspath = std.fs.path.join(arena, &.{
-                std.fs.selfExeDirPathAlloc(arena) catch unreachable,
+                windows.selfExeDirPathAlloc(arena) catch unreachable,
                 relpath,
             }) catch unreachable;
 

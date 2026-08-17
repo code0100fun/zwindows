@@ -5,28 +5,32 @@
 const std = @import("std");
 
 pub const WINAPI: std.builtin.CallingConvention = .winapi;
-pub const S_OK = std.os.windows.S_OK;
-pub const S_FALSE = std.os.windows.S_FALSE;
-pub const E_NOTIMPL = std.os.windows.E_NOTIMPL;
-pub const E_NOINTERFACE = std.os.windows.E_NOINTERFACE;
-pub const E_POINTER = std.os.windows.E_POINTER;
-pub const E_ABORT = std.os.windows.E_ABORT;
-pub const E_FAIL = std.os.windows.E_FAIL;
-pub const E_UNEXPECTED = std.os.windows.E_UNEXPECTED;
-pub const E_ACCESSDENIED = std.os.windows.E_ACCESSDENIED;
-pub const E_HANDLE = std.os.windows.E_HANDLE;
-pub const E_OUTOFMEMORY = std.os.windows.E_OUTOFMEMORY;
-pub const E_INVALIDARG = std.os.windows.E_INVALIDARG;
-pub const GENERIC_READ = std.os.windows.GENERIC_READ;
-pub const GENERIC_WRITE = std.os.windows.GENERIC_WRITE;
-pub const GENERIC_EXECUTE = std.os.windows.GENERIC_EXECUTE;
-pub const GENERIC_ALL = std.os.windows.GENERIC_ALL;
-pub const EVENT_ALL_ACCESS = std.os.windows.EVENT_ALL_ACCESS;
-pub const INFINITE = std.os.windows.INFINITE;
-pub const TRUE = std.os.windows.TRUE;
-pub const FALSE = std.os.windows.FALSE;
-pub const BOOL = std.os.windows.BOOL;
-pub const BOOLEAN = std.os.windows.BOOLEAN;
+// The following definitions were removed from std.os.windows in Zig 0.16,
+// so they are defined here directly.
+pub const S_OK: HRESULT = 0;
+pub const S_FALSE: HRESULT = 1;
+pub const E_NOTIMPL = @as(HRESULT, @bitCast(@as(c_ulong, 0x80004001)));
+pub const E_NOINTERFACE = @as(HRESULT, @bitCast(@as(c_ulong, 0x80004002)));
+pub const E_POINTER = @as(HRESULT, @bitCast(@as(c_ulong, 0x80004003)));
+pub const E_ABORT = @as(HRESULT, @bitCast(@as(c_ulong, 0x80004004)));
+pub const E_FAIL = @as(HRESULT, @bitCast(@as(c_ulong, 0x80004005)));
+pub const E_UNEXPECTED = @as(HRESULT, @bitCast(@as(c_ulong, 0x8000FFFF)));
+pub const E_ACCESSDENIED = @as(HRESULT, @bitCast(@as(c_ulong, 0x80070005)));
+pub const E_HANDLE = @as(HRESULT, @bitCast(@as(c_ulong, 0x80070006)));
+pub const E_OUTOFMEMORY = @as(HRESULT, @bitCast(@as(c_ulong, 0x8007000E)));
+pub const E_INVALIDARG = @as(HRESULT, @bitCast(@as(c_ulong, 0x80070057)));
+pub const GENERIC_READ = 0x80000000;
+pub const GENERIC_WRITE = 0x40000000;
+pub const GENERIC_EXECUTE = 0x20000000;
+pub const GENERIC_ALL = 0x10000000;
+pub const EVENT_ALL_ACCESS = 0x001F0003;
+pub const INFINITE = 4294967295;
+pub const TRUE = 1;
+pub const FALSE = 0;
+// In Zig 0.16 std.os.windows.BOOL/BOOLEAN became distinct enum types
+// (Bool(c_int)/Bool(BYTE)); these bindings use the classic integer types.
+pub const BOOL = c_int;
+pub const BOOLEAN = BYTE;
 pub const BYTE = std.os.windows.BYTE;
 pub const CHAR = std.os.windows.CHAR;
 pub const UCHAR = std.os.windows.UCHAR;
@@ -34,10 +38,10 @@ pub const WCHAR = std.os.windows.WCHAR;
 pub const FLOAT = std.os.windows.FLOAT;
 pub const HCRYPTPROV = std.os.windows.HCRYPTPROV;
 pub const ATOM = std.os.windows.ATOM;
-pub const WPARAM = std.os.windows.WPARAM;
+pub const WPARAM = usize;
 pub const LPARAM = std.os.windows.LPARAM;
-pub const LRESULT = std.os.windows.LRESULT;
-pub const HRESULT = std.os.windows.HRESULT;
+pub const LRESULT = LONG_PTR;
+pub const HRESULT = c_long;
 pub const HBRUSH = std.os.windows.HBRUSH;
 pub const HCURSOR = std.os.windows.HCURSOR;
 pub const HICON = std.os.windows.HICON;
@@ -67,7 +71,7 @@ pub const LONG_PTR = std.os.windows.LONG_PTR;
 pub const DWORD_PTR = std.os.windows.DWORD_PTR;
 pub const DWORD64 = std.os.windows.DWORD64;
 pub const ULONG64 = std.os.windows.ULONG64;
-pub const HLOCAL = std.os.windows.HLOCAL;
+pub const HLOCAL = HANDLE;
 pub const LPCSTR = std.os.windows.LPCSTR;
 pub const LPCVOID = std.os.windows.LPCVOID;
 pub const LPSTR = std.os.windows.LPSTR;
@@ -82,32 +86,108 @@ pub const GUID = std.os.windows.GUID;
 pub const NTSTATUS = std.os.windows.NTSTATUS;
 pub const CRITICAL_SECTION = std.os.windows.CRITICAL_SECTION;
 pub const SECURITY_ATTRIBUTES = std.os.windows.SECURITY_ATTRIBUTES;
-pub const RECT = std.os.windows.RECT;
-pub const POINT = std.os.windows.POINT;
+pub const RECT = extern struct {
+    left: LONG,
+    top: LONG,
+    right: LONG,
+    bottom: LONG,
+};
+pub const POINT = extern struct {
+    x: LONG,
+    y: LONG,
+};
 pub const LANGID = std.os.windows.LANGID;
 pub const MAX_PATH = std.os.windows.MAX_PATH;
-pub const KNOWNFOLDERID = std.os.windows.KNOWNFOLDERID;
-pub const FOLDERID_LocalAppData = std.os.windows.FOLDERID_LocalAppData;
-pub const KF_FLAG_DEFAULT = std.os.windows.KF_FLAG_DEFAULT;
-pub const KF_FLAG_NO_APPCONTAINER_REDIRECTION = std.os.windows.KF_FLAG_NO_APPCONTAINER_REDIRECTION;
-pub const KF_FLAG_CREATE = std.os.windows.KF_FLAG_CREATE;
-pub const KF_FLAG_DONT_VERIFY = std.os.windows.KF_FLAG_DONT_VERIFY;
-pub const KF_FLAG_DONT_UNEXPAND = std.os.windows.KF_FLAG_DONT_UNEXPAND;
-pub const KF_FLAG_NO_ALIAS = std.os.windows.KF_FLAG_NO_ALIAS;
-pub const KF_FLAG_INIT = std.os.windows.KF_FLAG_INIT;
-pub const KF_FLAG_DEFAULT_PATH = std.os.windows.KF_FLAG_DEFAULT_PATH;
-pub const KF_FLAG_NOT_PARENT_RELATIVE = std.os.windows.KF_FLAG_NOT_PARENT_RELATIVE;
-pub const KF_FLAG_SIMPLE_IDLIST = std.os.windows.KF_FLAG_SIMPLE_IDLIST;
-pub const KF_FLAG_ALIAS_ONLY = std.os.windows.KF_FLAG_ALIAS_ONLY;
-pub const PTHREAD_START_ROUTINE = std.os.windows.PTHREAD_START_ROUTINE;
-pub const LPTHREAD_START_ROUTINE = std.os.windows.LPTHREAD_START_ROUTINE;
+pub const KNOWNFOLDERID = GUID;
+pub const FOLDERID_LocalAppData = GUID.parse("{F1B32785-6FBA-4FCF-9D55-7B8E7F157091}");
+pub const KF_FLAG_DEFAULT = 0;
+pub const KF_FLAG_NO_APPCONTAINER_REDIRECTION = 65536;
+pub const KF_FLAG_CREATE = 32768;
+pub const KF_FLAG_DONT_VERIFY = 16384;
+pub const KF_FLAG_DONT_UNEXPAND = 8192;
+pub const KF_FLAG_NO_ALIAS = 4096;
+pub const KF_FLAG_INIT = 2048;
+pub const KF_FLAG_DEFAULT_PATH = 1024;
+pub const KF_FLAG_NOT_PARENT_RELATIVE = 512;
+pub const KF_FLAG_SIMPLE_IDLIST = 256;
+pub const KF_FLAG_ALIAS_ONLY = -2147483648;
+pub const PTHREAD_START_ROUTINE = *const fn (LPVOID) callconv(WINAPI) DWORD;
+pub const LPTHREAD_START_ROUTINE = PTHREAD_START_ROUTINE;
 pub const OSVERSIONINFOW = std.os.windows.OSVERSIONINFOW;
 pub const CloseHandle = std.os.windows.CloseHandle;
-pub const FindClose = std.os.windows.FindClose;
-pub const FreeLibrary = std.os.windows.FreeLibrary;
-pub const WaitForSingleObject = std.os.windows.WaitForSingleObject;
-pub const WaitForSingleObjectEx = std.os.windows.WaitForSingleObjectEx;
-pub const WaitForMultipleObjectsEx = std.os.windows.WaitForMultipleObjectsEx;
+pub extern "kernel32" fn FindClose(hFindFile: HANDLE) callconv(WINAPI) BOOL;
+pub extern "kernel32" fn FreeLibrary(hLibModule: HMODULE) callconv(WINAPI) BOOL;
+pub extern "kernel32" fn GetModuleFileNameW(hModule: ?HMODULE, lpFilename: [*]u16, nSize: DWORD) callconv(WINAPI) DWORD;
+
+pub const WAIT_OBJECT_0 = 0x00000000;
+pub const WAIT_ABANDONED = 0x00000080;
+pub const WAIT_TIMEOUT = 0x00000102;
+pub const WAIT_FAILED = 0xFFFFFFFF;
+pub const MAXIMUM_WAIT_OBJECTS = 64;
+
+const kernel32 = struct {
+    extern "kernel32" fn WaitForSingleObjectEx(
+        hHandle: HANDLE,
+        dwMilliseconds: DWORD,
+        bAlertable: BOOL,
+    ) callconv(WINAPI) DWORD;
+    extern "kernel32" fn WaitForMultipleObjectsEx(
+        nCount: DWORD,
+        lpHandles: [*]const HANDLE,
+        bWaitAll: BOOL,
+        dwMilliseconds: DWORD,
+        bAlertable: BOOL,
+    ) callconv(WINAPI) DWORD;
+};
+
+pub const WaitError = error{ WaitAbandoned, WaitTimeOut, Unexpected };
+
+pub fn WaitForSingleObject(handle: HANDLE, milliseconds: DWORD) WaitError!void {
+    return WaitForSingleObjectEx(handle, milliseconds, false);
+}
+
+pub fn WaitForSingleObjectEx(handle: HANDLE, milliseconds: DWORD, alertable: bool) WaitError!void {
+    switch (kernel32.WaitForSingleObjectEx(handle, milliseconds, @intFromBool(alertable))) {
+        WAIT_ABANDONED => return error.WaitAbandoned,
+        WAIT_OBJECT_0 => return,
+        WAIT_TIMEOUT => return error.WaitTimeOut,
+        else => return error.Unexpected,
+    }
+}
+
+pub fn WaitForMultipleObjectsEx(
+    handles: []const HANDLE,
+    waitAll: bool,
+    milliseconds: DWORD,
+    alertable: bool,
+) WaitError!u32 {
+    std.debug.assert(handles.len > 0 and handles.len < MAXIMUM_WAIT_OBJECTS);
+    const count: DWORD = @intCast(handles.len);
+    switch (kernel32.WaitForMultipleObjectsEx(
+        count,
+        handles.ptr,
+        @intFromBool(waitAll),
+        milliseconds,
+        @intFromBool(alertable),
+    )) {
+        WAIT_OBJECT_0...WAIT_OBJECT_0 + MAXIMUM_WAIT_OBJECTS - 1 => |n| return n - WAIT_OBJECT_0,
+        WAIT_ABANDONED...WAIT_ABANDONED + MAXIMUM_WAIT_OBJECTS - 1 => return error.WaitAbandoned,
+        WAIT_TIMEOUT => return error.WaitTimeOut,
+        else => return error.Unexpected,
+    }
+}
+
+/// Returns the directory containing the running executable, allocated with `allocator`.
+/// Replacement for std.fs.selfExeDirPathAlloc which was removed in Zig 0.16.
+pub fn selfExeDirPathAlloc(allocator: std.mem.Allocator) ![]u8 {
+    var buf_w: [std.os.windows.PATH_MAX_WIDE]u16 = undefined;
+    const len = GetModuleFileNameW(null, &buf_w, buf_w.len);
+    if (len == 0 or len >= buf_w.len) return error.Unexpected;
+    var buf: [std.fs.max_path_bytes]u8 = undefined;
+    const n = try std.unicode.utf16LeToUtf8(buf[0..], buf_w[0..len]);
+    const dir = std.fs.path.dirname(buf[0..n]) orelse return error.Unexpected;
+    return allocator.dupe(u8, dir);
+}
 
 pub const dwrite = @import("windows/dwrite.zig");
 pub const dxgi = @import("windows/dxgi.zig");
